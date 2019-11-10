@@ -1,42 +1,62 @@
 package org.tnt.tempwatchertracker
 
-import org.hamcrest.MatcherAssert
+import kotlinx.coroutines.*
+import org.hamcrest.Matchers.`is`
 import org.junit.After
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.runners.MockitoJUnitRunner
+import java.lang.Thread.sleep
+import kotlin.time.ExperimentalTime
 
-@RunWith(MockitoJUnitRunner::class)
+
+@ExperimentalTime
 class TemperatureWatcherTest {
 
-    val temperatureLogger = InMemoryTemperatureLogger()
-    @Mock
-    lateinit var temperatureSensor: TemperatureSensor
-    val temperatureWatcher = TemperatureWatcher(temperatureLogger, temperatureSensor)
+    private val readingPadInMillis = 50
+    private val temperatureLogger = InMemoryTemperatureLogger()
+    private val temperatureSensor = InMemoryTemperatureSensor()
+    private val temperatureWatcher: TemperatureWatcher = TemperatureWatcher(temperatureLogger, temperatureSensor)
+
 
     @Before
     fun setUp() {
-        `when`(temperatureSensor.read()).thenReturn(1.0).thenReturn(2.0).thenReturn(null)
+    }
+
+    private fun <T> after(duration: kotlin.time.Duration, value: () -> T): T {
+        sleep(duration.toLongMilliseconds())
+        return value.invoke()
     }
 
     @After
-    fun tearDown() {
+    fun tearDown() = runBlocking {
         temperatureWatcher.stop()
     }
 
     @Test
     fun `stores retrieved temperature`() {
-
-
         temperatureWatcher.start()
-        temperatureWatcher.stop()
-
-//        assertThat(temperatureLogger.loggedTemperatures, contains(listOf(1.0, 2.0)))
-
-
+        sleep(2.temperatureReadings)
+        assertThat(temperatureLogger.loggedTemperatures, `is`(listOf(0.0, 1.0)))
     }
+
+    @Test
+    fun `no logged readings after stop function`() {
+        temperatureWatcher.start()
+        sleep(2.temperatureReadings)
+        runBlocking { temperatureWatcher.stop() }
+        sleep(4.temperatureReadings)
+        assertThat(temperatureLogger.loggedTemperatures, `is`(listOf(0.0, 1.0)))
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `cannot run start twice`() {
+        temperatureWatcher.start()
+        temperatureWatcher.start()
+    }
+
+    private val Int.temperatureReadings: Long
+        get() {
+            return temperatureSensor.readingsDelay.toLongMilliseconds() * this + readingPadInMillis
+        }
 }

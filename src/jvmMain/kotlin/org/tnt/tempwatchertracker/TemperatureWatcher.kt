@@ -1,17 +1,27 @@
 package org.tnt.tempwatchertracker
 
+import kotlinx.coroutines.*
 import org.tnt.tempwatchertracker.InMemoryTemperatureLogger.TemperatureLogger
 
 
 class TemperatureWatcher(
-    temperatureLogger: TemperatureLogger,
-    temperatureSensor: TemperatureSensor
+    val temperatureLogger: TemperatureLogger,
+    val temperatureSensor: TemperatureSensor
 ) {
-    fun stop() {
+    var job: Job? = null
 
+    suspend fun stop() {
+        job?.cancelAndJoin()
     }
 
     fun start() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        if (job != null) {
+            throw IllegalStateException("TemperatureWatcher has already been started")
+        }
+        job = GlobalScope.launch {
+            while (isActive) {
+                temperatureSensor.read()?.let { temperatureLogger.logTemperature(it) }
+            }
+        }
     }
 }

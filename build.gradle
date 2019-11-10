@@ -48,6 +48,8 @@ kotlin {
                 implementation kotlin('test')
                 implementation kotlin('test-junit')
                 implementation 'org.mockito:mockito-all:1.10.19'
+                implementation 'junit:junit:4.12'
+                implementation 'org.hamcrest:hamcrest-library:1.3'
 
             }
         }

@@ -2,5 +2,5 @@ package org.tnt.tempwatchertracker
 
 
 interface TemperatureSensor {
-    fun read(): Double?
+    suspend fun read(): Double?
 }

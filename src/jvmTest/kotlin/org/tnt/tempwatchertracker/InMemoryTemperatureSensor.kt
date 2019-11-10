@@ -1,11 +1,15 @@
 package org.tnt.tempwatchertracker
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.milliseconds
 
-class InMemoryTemperatureSensor : TemperatureSensor {
-    override fun read(): Float {
-
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+@ExperimentalTime
+class InMemoryTemperatureSensor(var temperature: Double = 0.0, val readingsDelay: Duration = 100.milliseconds) :
+    TemperatureSensor {
+    override suspend fun read(): Double? {
+        delay(readingsDelay.toLongMilliseconds())
+        return temperature++
     }
 }
